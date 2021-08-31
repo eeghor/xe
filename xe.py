@@ -9,7 +9,7 @@ class XE:
 
     DATE_FRM = "YYYY-MM-DD"
 
-    def get(self, currency, date=None):
+    def get(self, currency: str = None, date: str = None, save_to: str = None):
 
         today = arrow.now().format(self.DATE_FRM)
 
@@ -36,7 +36,9 @@ class XE:
 
             soup = BeautifulSoup(r.text, "html.parser")
 
-            if soup.select("#table-section > section > div.currencytables__TablePadder-xlq26m-0.bqoUf > div > table"):
+            _table_selector = "#table-section > section > div.currencytables__TablePadder-xlq26m-0.bqoUf > div > table"
+
+            if soup.select(_table_selector):
                 got_table = True
                 break
             elif i == 0:
@@ -52,19 +54,38 @@ class XE:
 
         cols = [
             re.sub("[^\w ]", "", t.text)
-            for t in soup.select("#table-section > section > div.currencytables__TablePadder-xlq26m-0.bqoUf > div > table>thead>tr>th")
+            for t in soup.select(f"{_table_selector} > thead > tr > th")
         ]
 
         print(f"ok, found you a table for {date}")
 
-        currency_abbreviations = [_.text for _ in soup.select("#table-section > section > div.currencytables__TablePadder-xlq26m-0.bqoUf > div > table > tbody > tr > th")]
+        currency_abbreviations = [
+            _.text for _ in soup.select(f"{_table_selector} > tbody > tr > th")
+        ]
 
-        return pd.DataFrame(
+        fx_df = pd.concat(
             [
-                [
-                    s.text.replace(",","") if "." not in s.text else float(s.text.replace(",",""))
-                    for s in row.find_all("td")
-                ]
-                for row in soup.select("#table-section > section > div.currencytables__TablePadder-xlq26m-0.bqoUf > div > table > tbody > tr")
-            ]
-        ).rename(columns=dict(enumerate(cols))).assign(Abbr=currency_abbreviations)
+                pd.DataFrame(currency_abbreviations),
+                pd.DataFrame(
+                    [
+                        [
+                            s.text.replace(",", "")
+                            if "." not in s.text
+                            else float(s.text.replace(",", ""))
+                            for s in row.find_all("td")
+                        ]
+                        for row in soup.select(f"{_table_selector} > tbody > tr")
+                    ]
+                ),
+            ],
+            axis=1,
+            ignore_index=True,
+        ).rename(columns=dict(enumerate(cols)))
+
+        if save_to is not None:
+            try:
+                fx_df.to_csv(save_to, index=False)
+            except:
+                print(f"failed to save results to {save_to}")
+
+        return fx_df
