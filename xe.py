@@ -3,6 +3,7 @@ import re
 import pandas as pd
 from bs4 import BeautifulSoup
 import arrow
+import warnings
 
 
 class XE:
@@ -49,7 +50,7 @@ class XE:
                 continue
 
         if not got_table:
-            print("sorry, tried the day before and today but nothing worked")
+            warnings.warn("sorry, tried the day before and today but nothing worked")
             return self
 
         cols = [
