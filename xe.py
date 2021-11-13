@@ -14,7 +14,7 @@ class XE:
 
         today = arrow.now().format(self.DATE_FRM)
 
-        if date:
+        if date is not None:
 
             try:
                 date = arrow.get(date).format(self.DATE_FRM)
