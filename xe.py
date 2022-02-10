@@ -10,7 +10,7 @@ class XE:
 
     DATE_FRM = "YYYY-MM-DD"
 
-    def get(self, currency: str = None, date: str = None, save_to: str = None):
+    def get(self, currency: str = None, date: str = None, save_to_csv: bool = False):
 
         today = arrow.now().format(self.DATE_FRM)
 
@@ -83,7 +83,10 @@ class XE:
             ignore_index=True,
         ).rename(columns=dict(enumerate(cols)))
 
-        if save_to is not None:
+        if save_to_csv:
+
+            save_to = f"fx_rates_{currency}_{date}.csv"
+
             try:
                 fx_df.to_csv(save_to, index=False)
             except:
