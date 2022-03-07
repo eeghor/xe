@@ -1,7 +1,7 @@
-import requests
+import requests  # type: ignore
 import re
-import pandas as pd
-from bs4 import BeautifulSoup
+import pandas as pd  # type: ignore
+from bs4 import BeautifulSoup  # type: ignore
 import arrow
 import warnings
 
@@ -10,7 +10,13 @@ class XE:
 
     DATE_FRM = "YYYY-MM-DD"
 
-    def get(self, currency: str = None, date: str = None, save_to_csv: bool = False):
+    def get(
+        self,
+        currency: str = "USD",
+        date: str = None,
+        save_to_csv: bool = False,
+        attempts: int = 3,
+    ) -> pd.DataFrame:
 
         today = arrow.now().format(self.DATE_FRM)
 
@@ -25,7 +31,7 @@ class XE:
 
         got_table = False
 
-        for i in range(3):
+        for i in range(attempts):
 
             self.URL = f"https://www.xe.com/currencytables/?from={currency.upper()}&date={date}#table-section"
 
